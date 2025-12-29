@@ -1,0 +1,7 @@
+@SkillSwape_HostAddress = https://localhost:7250
+
+
+GET {{SkillSwape_HostAddress}}
+Accept: application/json
+
+###
