@@ -3,10 +3,13 @@ using SkillSwape.DTOs.CreditTransaction;
 
 namespace SkillSwape.Validators
 {
-    public class CreditTransactionDtoValidator : AbstractValidator<CreditTransactionDto>
+    public class CreditTransactionValidator : AbstractValidator<CreditTransactionDto>
     {
-        public CreditTransactionDtoValidator()
+        public CreditTransactionValidator()
         {
+            RuleFor(x => x.TransactionId)
+                .GreaterThanOrEqualTo(0).WithMessage("TransactionId cannot be negative.");
+
             RuleFor(x => x.UserId)
                 .GreaterThan(0).WithMessage("UserId must be greater than 0.");
 

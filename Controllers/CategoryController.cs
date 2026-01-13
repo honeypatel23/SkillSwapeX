@@ -1,18 +1,20 @@
-﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs;
 using SkillSwape.Models;
 using SkillSwape.Services;
+using SkillSwape.Validators;
 
 [ApiController]
 [Route("api/categories")]
 public class CategoriesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly IValidator<CategoryDto> _validator;
+    private readonly CategoryValidator _validator;
 
-    public CategoriesController(ApplicationDbContext context, IValidator<CategoryDto> validator)
+    public CategoriesController(
+        ApplicationDbContext context,
+        CategoryValidator validator)
     {
         _context = context;
         _validator = validator;
@@ -41,6 +43,8 @@ public class CategoriesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CategoryDto dto)
     {
+        dto.CategoryId = 0; // IMPORTANT for create
+
         var result = await _validator.ValidateAsync(dto);
         if (!result.IsValid)
             return BadRequest(result.Errors);
@@ -60,6 +64,11 @@ public class CategoriesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, CategoryDto dto)
     {
+        if (id <= 0)
+            return BadRequest("Invalid CategoryId.");
+
+        dto.CategoryId = id;
+
         var result = await _validator.ValidateAsync(dto);
         if (!result.IsValid)
             return BadRequest(result.Errors);

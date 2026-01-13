@@ -3,10 +3,13 @@ using SkillSwape.DTOs.WorkSubmission;
 
 namespace SkillSwape.Validators
 {
-    public class WorkSubmissionDtoValidator : AbstractValidator<WorkSubmissionDto>
+    public class WorkSubmissionValidator : AbstractValidator<WorkSubmissionDto>
     {
-        public WorkSubmissionDtoValidator()
+        public WorkSubmissionValidator()
         {
+            RuleFor(x => x.SubmissionId)
+                .GreaterThanOrEqualTo(0).WithMessage("SubmissionId cannot be negative.");
+
             RuleFor(x => x.RequestId)
                 .GreaterThan(0).WithMessage("RequestId is required.");
 

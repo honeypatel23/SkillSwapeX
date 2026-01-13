@@ -3,10 +3,13 @@ using SkillSwape.DTOs.LearningSession;
 
 namespace SkillSwape.Validators
 {
-    public class LearningSessionDtoValidator : AbstractValidator<LearningSessionDto>
+    public class LearningSessionValidator : AbstractValidator<LearningSessionDto>
     {
-        public LearningSessionDtoValidator()
+        public LearningSessionValidator()
         {
+            RuleFor(x => x.SessionId)
+                .GreaterThanOrEqualTo(0).WithMessage("SessionId cannot be negative.");
+
             RuleFor(x => x.RequestId)
                 .GreaterThan(0).WithMessage("RequestId is required.");
 

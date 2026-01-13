@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs.User;
 using SkillSwape.Models;
 using SkillSwape.Services;
+using SkillSwape.Validators;
 
 namespace SkillSwape.Controllers
 {
@@ -11,13 +13,17 @@ namespace SkillSwape.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserValidator _validator;
 
-        public UsersController(ApplicationDbContext context)
+        public UsersController(
+            ApplicationDbContext context,
+            UserValidator validator)
         {
             _context = context;
+            _validator = validator;
         }
 
-        // GET: api/users
+        // ================= GET ALL =================
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -25,29 +31,29 @@ namespace SkillSwape.Controllers
             return Ok(users);
         }
 
-        // GET: api/users/5
+        // ================= GET BY ID =================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _context.Users.FindAsync(id);
-
             if (user == null)
                 return NotFound("User not found");
 
             return Ok(user);
         }
 
-        // POST: api/users (CREATE)
+        // ================= CREATE =================
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] UserDto dto)
         {
-            // UserId must be 0 while creating
-            if (dto.UserId != 0)
-                return BadRequest("UserId should not be provided while creating user");
+            dto.UserId = 0; // IMPORTANT: Create
 
-            bool emailExists = await _context.Users
-                .AnyAsync(u => u.Email == dto.Email);
+            var validationResult = await _validator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
 
+            // Check email uniqueness
+            bool emailExists = await _context.Users.AnyAsync(u => u.Email == dto.Email);
             if (emailExists)
                 return Conflict("Email already exists");
 
@@ -69,12 +75,18 @@ namespace SkillSwape.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, user);
         }
 
-        // PUT: api/users/5 (UPDATE)
+        // ================= UPDATE =================
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDto dto)
         {
-            if (id != dto.UserId)
-                return BadRequest("User ID mismatch");
+            if (id <= 0)
+                return BadRequest("Invalid UserId.");
+
+            dto.UserId = id; // IMPORTANT: Update
+
+            var validationResult = await _validator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
 
             var existingUser = await _context.Users.FindAsync(id);
             if (existingUser == null)
@@ -89,16 +101,13 @@ namespace SkillSwape.Controllers
 
             // Update password ONLY if provided
             if (!string.IsNullOrWhiteSpace(dto.Password))
-            {
                 existingUser.Password = dto.Password; // TODO: Hash later
-            }
 
             await _context.SaveChangesAsync();
-
             return Ok(existingUser);
         }
 
-        // DELETE: api/users/5
+        // ================= DELETE =================
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
