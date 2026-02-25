@@ -1,12 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs;
 using SkillSwape.Models;
 using SkillSwape.Services;
 using SkillSwape.Validators;
 
+namespace SkillSwape.Controllers.V1;
+
+[Authorize]
 [ApiController]
-[Route("api/categories")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
+//[Route("api/categories")]
 public class CategoriesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -20,7 +26,8 @@ public class CategoriesController : ControllerBase
         _validator = validator;
     }
 
-    // ================= GET ALL =================
+    //  GET ALL 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -28,7 +35,7 @@ public class CategoriesController : ControllerBase
         return Ok(categories);
     }
 
-    // ================= GET BY ID =================
+    //  GET BY ID 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -39,7 +46,8 @@ public class CategoriesController : ControllerBase
         return Ok(category);
     }
 
-    // ================= CREATE =================
+    //  CREATE 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create(CategoryDto dto)
     {
@@ -60,7 +68,7 @@ public class CategoriesController : ControllerBase
         return Ok(category);
     }
 
-    // ================= UPDATE =================
+    //  UPDATE 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, CategoryDto dto)
     {
@@ -83,7 +91,7 @@ public class CategoriesController : ControllerBase
         return Ok(category);
     }
 
-    // ================= DELETE =================
+    //  DELETE 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -97,3 +105,4 @@ public class CategoriesController : ControllerBase
         return Ok("Category deleted successfully");
     }
 }
+

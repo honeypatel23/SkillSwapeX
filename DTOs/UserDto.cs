@@ -23,5 +23,7 @@ namespace SkillSwape.DTOs.User
         public string? Bio { get; set; }
 
         public int TotalCredits { get; set; }
+        public string? Role { get; set; } //admin or user 
+
     }
 }

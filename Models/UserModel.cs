@@ -9,6 +9,7 @@ namespace SkillSwape.Models
         [Key]
         public int UserId { get; set; }
 
+
         [Required, MaxLength(100)]
         public string FullName { get; set; }
 
@@ -17,6 +18,10 @@ namespace SkillSwape.Models
 
         [Required]
         public string Password { get; set; }
+        [Required]
+        [MaxLength(20)]
+        public string Role { get; set; } = "User";
+
 
         [MaxLength(50)]
         public string City { get; set; }

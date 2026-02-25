@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs.User;
@@ -8,6 +9,7 @@ using SkillSwape.Validators;
 
 namespace SkillSwape.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -23,7 +25,7 @@ namespace SkillSwape.Controllers
             _validator = validator;
         }
 
-        // ================= GET ALL =================
+        //  GET ALL 
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -31,7 +33,7 @@ namespace SkillSwape.Controllers
             return Ok(users);
         }
 
-        // ================= GET BY ID =================
+        //  GET BY ID 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
@@ -42,11 +44,11 @@ namespace SkillSwape.Controllers
             return Ok(user);
         }
 
-        // ================= CREATE =================
+        //  CREATE 
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] UserDto dto)
         {
-            dto.UserId = 0; // IMPORTANT: Create
+            dto.UserId = 0; //  Create
 
             var validationResult = await _validator.ValidateAsync(dto);
             if (!validationResult.IsValid)
@@ -66,6 +68,7 @@ namespace SkillSwape.Controllers
                 ProfileImage = dto.ProfileImage,
                 Bio = dto.Bio,
                 TotalCredits = 0,
+                Role = dto.Role ?? "User",   //    IMPORTANT
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -75,7 +78,7 @@ namespace SkillSwape.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, user);
         }
 
-        // ================= UPDATE =================
+        //  UPDATE 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDto dto)
         {
@@ -98,6 +101,8 @@ namespace SkillSwape.Controllers
             existingUser.ProfileImage = dto.ProfileImage;
             existingUser.Bio = dto.Bio;
             existingUser.TotalCredits = dto.TotalCredits;
+            existingUser.Role = dto.Role ?? existingUser.Role;
+
 
             // Update password ONLY if provided
             if (!string.IsNullOrWhiteSpace(dto.Password))
@@ -107,7 +112,7 @@ namespace SkillSwape.Controllers
             return Ok(existingUser);
         }
 
-        // ================= DELETE =================
+        //  DELETE 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

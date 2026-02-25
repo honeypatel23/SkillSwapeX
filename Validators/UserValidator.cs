@@ -21,6 +21,10 @@ namespace SkillSwape.Validators
 
             RuleFor(x => x.Bio)
                 .MaximumLength(500).WithMessage("Bio cannot exceed 500 characters.");
+            RuleFor(x => x.Role)
+    .Must(r => r == null || r == "User" || r == "Admin")
+    .WithMessage("Role must be User or Admin");
+
 
             // PK RULE (Create vs Update)
             RuleFor(x => x.UserId)

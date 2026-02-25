@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs.ServiceRequest;
 using SkillSwape.Models;
@@ -7,6 +8,7 @@ using SkillSwape.Validators;
 
 namespace SkillSwape.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ServiceRequestsController : ControllerBase

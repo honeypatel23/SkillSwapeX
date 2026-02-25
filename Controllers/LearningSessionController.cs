@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs.LearningSession;
 using SkillSwape.Models;
@@ -7,6 +8,7 @@ using SkillSwape.Validators;
 
 namespace SkillSwape.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class LearningSessionController : ControllerBase
@@ -22,7 +24,7 @@ namespace SkillSwape.Controllers
             _validator = validator;
         }
 
-        // ================= GET ALL =================
+        //  GET ALL 
         [HttpGet]
         public async Task<IActionResult> GetAllSessions()
         {
@@ -30,7 +32,7 @@ namespace SkillSwape.Controllers
             return Ok(sessions);
         }
 
-        // ================= GET BY ID =================
+        //  GET BY ID 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSessionById(int id)
         {
@@ -41,7 +43,7 @@ namespace SkillSwape.Controllers
             return Ok(session);
         }
 
-        // ================= CREATE =================
+        //  CREATE 
         [HttpPost]
         public async Task<IActionResult> CreateSession([FromBody] LearningSessionDto dto)
         {
@@ -78,7 +80,7 @@ namespace SkillSwape.Controllers
                 session);
         }
 
-        // ================= UPDATE =================
+        //  UPDATE 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSession(int id, [FromBody] LearningSessionDto dto)
         {
@@ -115,7 +117,7 @@ namespace SkillSwape.Controllers
             return Ok(existingSession);
         }
 
-        // ================= DELETE =================
+        //  DELETE 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSession(int id)
         {

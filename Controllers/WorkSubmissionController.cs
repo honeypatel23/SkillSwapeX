@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkillSwape.DTOs.WorkSubmission;
@@ -8,6 +9,7 @@ using SkillSwape.Validators;
 
 namespace SkillSwape.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class WorkSubmissionController : ControllerBase
