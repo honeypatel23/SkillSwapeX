@@ -77,7 +77,77 @@ namespace SkillSwape.Controllers
 
             return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, user);
         }
+        // BULK CREATE USERS (SAFE)
+        [HttpPost("bulk")]
+        [Authorize(Roles = "Admin")] // Only Admin can bulk insert
+        public async Task<IActionResult> BulkCreateUsers([FromBody] List<UserDto> dtos)
+        {
+            if (dtos == null || !dtos.Any())
+                return BadRequest("No users provided.");
 
+            // Check duplicate emails inside request
+            var duplicateRequestEmails = dtos
+                .GroupBy(x => x.Email)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            if (duplicateRequestEmails.Any())
+                return BadRequest($"Duplicate emails in request: {string.Join(", ", duplicateRequestEmails)}");
+
+            // Check duplicate emails in database
+            var emails = dtos.Select(x => x.Email).ToList();
+            var existingEmails = await _context.Users
+                .Where(u => emails.Contains(u.Email))
+                .Select(u => u.Email)
+                .ToListAsync();
+
+            if (existingEmails.Any())
+                return Conflict($"These emails already exist: {string.Join(", ", existingEmails)}");
+
+            var users = new List<UserModel>();
+
+            foreach (var dto in dtos)
+            {
+                dto.UserId = 0;
+
+                var validationResult = await _validator.ValidateAsync(dto);
+                if (!validationResult.IsValid)
+                    return BadRequest(validationResult.Errors);
+
+                users.Add(new UserModel
+                {
+                    FullName = dto.FullName,
+                    Email = dto.Email,
+                    Password = dto.Password, //
+                    City = dto.City,
+                    ProfileImage = dto.ProfileImage,
+                    Bio = dto.Bio ?? "",
+                    TotalCredits = 0,
+                    Role = dto.Role ?? "User",
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+
+            // Use transaction for safety
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                await _context.Users.AddRangeAsync(users);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+                return Ok($"{users.Count} users inserted successfully.");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                var inner = ex.InnerException?.Message;
+                return StatusCode(500, inner ?? ex.Message);
+            }
+        }
         //  UPDATE 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserDto dto)
@@ -106,7 +176,7 @@ namespace SkillSwape.Controllers
 
             // Update password ONLY if provided
             if (!string.IsNullOrWhiteSpace(dto.Password))
-                existingUser.Password = dto.Password; // TODO: Hash later
+                existingUser.Password = dto.Password; 
 
             await _context.SaveChangesAsync();
             return Ok(existingUser);

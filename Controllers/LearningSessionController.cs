@@ -99,12 +99,16 @@ namespace SkillSwape.Controllers
                 return NotFound("Learning session not found");
 
             // FK CHECK
-            bool requestExists = await _context.ServiceRequests
-                .AnyAsync(r => r.RequestId == dto.RequestId);
+            var serviceRequest = await _context.ServiceRequests
+                .FirstOrDefaultAsync(r => r.RequestId == dto.RequestId);
 
-            if (!requestExists)
+            if (serviceRequest == null)
                 return BadRequest("Invalid RequestId");
 
+            // Store old status to check if it's changing to Completed
+            string oldStatus = existingSession.Status;
+
+            // Update fields
             existingSession.RequestId = dto.RequestId;
             existingSession.SessionType = dto.SessionType;
             existingSession.MeetingLink = dto.MeetingLink;
@@ -112,7 +116,37 @@ namespace SkillSwape.Controllers
             existingSession.Status = dto.Status;
             existingSession.MeetingPlatform = dto.MeetingPlatform;
 
-            await _context.SaveChangesAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // If status changed to Completed, process credit transfer
+                if (oldStatus != "Completed" && existingSession.Status == "Completed")
+                {
+                    // Fetch requester and provider
+                    var requester = await _context.Users.FindAsync(serviceRequest.RequestedById);
+                    var provider = await _context.Users.FindAsync(serviceRequest.RequestedToId);
+
+                    if (requester != null && provider != null && serviceRequest.TotalSessions > 0)
+                    {
+                        // Calculate credits per session (rounded to nearest integer or kept as is if TotalCredits is int)
+                        int creditsPerSession = serviceRequest.TotalCredits / serviceRequest.TotalSessions;
+
+                        // Deduct from requester (allow negative or check if they have enough? Assuming deduction is allowed or happens at end)
+                        requester.TotalCredits -= creditsPerSession;
+                        // Add to provider
+                        provider.TotalCredits += creditsPerSession;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, "An error occurred while updating the session.");
+            }
 
             return Ok(existingSession);
         }

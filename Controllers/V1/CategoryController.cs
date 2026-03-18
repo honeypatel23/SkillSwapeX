@@ -10,9 +10,7 @@ namespace SkillSwape.Controllers.V1;
 
 [Authorize]
 [ApiController]
-[ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
-//[Route("api/categories")]
+[Route("api/categories")]
 public class CategoriesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;

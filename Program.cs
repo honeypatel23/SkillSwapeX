@@ -7,19 +7,25 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SkillSwape.Controllers;
+using SkillSwape.Middleware;
 using SkillSwape.Services;
 using SkillSwape.Validators;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ------------------ DATABASE ------------------
+
+
+// DATABASE
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// ------------------ CONTROLLERS + VALIDATION ------------------
+
+
+// CONTROLLERS AND VALIDATION
 
 builder.Services
     .AddControllers()
@@ -31,7 +37,9 @@ builder.Services
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// ------------------ JWT ------------------
+
+
+// JWT AUTHENTICATION
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -53,7 +61,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// ------------------ CORS ------------------
+
+
+// CORS
 
 builder.Services.AddCors(options =>
 {
@@ -65,7 +75,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ------------------ API VERSIONING ------------------
+
+
+// API VERSIONING
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -77,15 +89,30 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddVersionedApiExplorer(options =>
 {
-    options.GroupNameFormat = "'v'VVV";  // v1, v2
+    options.GroupNameFormat = "'v'VVV";
     options.SubstituteApiVersionInUrl = true;
 });
 
-// ------------------ SWAGGER ------------------
+
+
+// SWAGGER
 
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "SkillSwape API",
+        Version = "v1"
+    });
+
+    options.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Title = "SkillSwape API",
+        Version = "v2"
+    });
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -93,7 +120,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter token like: Bearer {your token}"
+        Description = "Enter JWT token like this: Bearer {your token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -112,31 +139,33 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+
+
 var app = builder.Build();
 
-// ------------------ SWAGGER UI ------------------
+
+
+// SWAGGER UI
 
 if (app.Environment.IsDevelopment())
 {
-    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-
     app.UseSwagger();
 
     app.UseSwaggerUI(options =>
     {
-        foreach (var description in provider.ApiVersionDescriptions)
-        {
-            options.SwaggerEndpoint(
-                $"/swagger/{description.GroupName}/swagger.json",
-                $"SkillSwape API {description.GroupName.ToUpperInvariant()}");
-        }
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "SkillSwape API v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "SkillSwape API v2");
     });
 }
 
-// ------------------ PIPELINE ------------------
+
+
+// PIPELINE
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
+
+app.UseMiddleware<CustomMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

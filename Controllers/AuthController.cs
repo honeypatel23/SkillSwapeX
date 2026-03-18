@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(u => u.Email == model.Email);
 
         // Verify user exists and password matches
-        // NOTE: In a real production app, use a password hasher like BCrypt
+        
         if (user == null || user.Password != model.Password)
         {
             return Unauthorized("Invalid credentials");
