@@ -1,0 +1,76 @@
+/* Bootstrap Import */
+/* Bootstrap imported in main.jsx */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap');
+
+/* Custom Global Styles */
+:root {
+  --sidebar-width: 260px;
+  --header-height: 60px;
+  --primary-color: #06BBCC;
+  /* Template Primary Color */
+  --secondary-color: #858796;
+  --bg-color: #f8f9fc;
+  --text-color: #5a5c69;
+  --light: #F0FBFC;
+  --dark: #181d38;
+}
+
+body {
+  margin: 0;
+  font-family: 'Heebo', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Nunito', sans-serif;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #05a0ae;
+  border-color: #05a0ae;
+}
+
+
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
